@@ -1,0 +1,9 @@
+cr7 = goat
+messi = frionel
+mbappe = idolo
+federer = bestPlayer
+nadal = medianPlayer
+djokovic = badPlayer
+murray = goodPlayer
+garin = pechoFrio
+jarry = arrugon

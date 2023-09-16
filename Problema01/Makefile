@@ -1,13 +1,7 @@
-CC = g++
-CFLAGS = -std=c++17 -O3
-SOURCES = main01.cpp
-#FUNCTIONS = funciones/menu.cpp 
-EXECUTABLE = app
+all: app
 
-all: $(EXECUTABLE)
-
-$(EXECUTABLE): $(SOURCES) $(FUNCTIONS)
-	$(CC) $(CFLAGS) $^ -o $@
+app: src/main.cpp src/procEntrada.cpp
+	g++ -fopenmp src/main.cpp src/procEntrada.cpp -o app
 
 clean:
-	rm -f $(EXECUTABLE)
+	rm -f app
