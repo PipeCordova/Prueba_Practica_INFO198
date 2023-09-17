@@ -1,15 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <unistd.h>
-#include <algorithm>
-#include <numeric>
 #include "../include/funciones.h"
-#include <chrono>
-#include <thread>  
-
-using namespace std;
 
 int main(int argc, char *argv[]) {
     string u, p, v;
@@ -30,31 +19,47 @@ int main(int argc, char *argv[]) {
     
     if (algunParametroVacio(u, "-u") ||
         algunParametroVacio(p, "-p") ||
-        algunParametroVacio(v, "-v")){
+        algunParametroVacio(v, "-v")) {
         exit(EXIT_FAILURE);
     }
 
-    string rutaUsuarios;
-    leerConfiguracion(rutaUsuarios);
+    vector<int> vectorEntrada = convertirlo(v); // Convertir a vector el "vector" v de la entrada.
 
-    cout << endl;
+    string pathUser = getenv("DB_USERS");
+    string pathMenu = getenv("DB_MENU");
+
+    vector <int> permisos;
     
-    if (u == "admin" && p == "admin"){
+    cout << endl;
 
-    } else {
-        bool L = usuarioExiste(u, p, rutaUsuarios);
-        if (L){
-            cout << "El usuario existe y contraseña igual";
+    while (true){
+        ifstream archivoMenu(pathMenu);
+
+        mostrarMenu(archivoMenu);
+
+        int eleccion = obtenerEleccion();
+
+        if (eleccion == 0) {
+            break;
         }
-        else{
-            cout << "El usuario no existe";
+
+        if (u == "admin" && p == "admin") { // modo admin
+            permisos = {1,2,3};
+            ejecutarOpcion (eleccion, permisos, pathUser, u, vectorEntrada);
+        } else if (!usuarioExiste(u, p, pathUser)) { // si no es admin se verifica que exista en la BD
+            cout << "Usuario o contraseña ingresados no registrados en la BD!!" << endl;
+            exit(EXIT_FAILURE);
+        } else { // si existe en la BD, entonces esto
+            permisos = {2,3};
+            ejecutarOpcion (eleccion, permisos, pathUser, u, vectorEntrada);
         }
-        cout << endl;
+
+        cout << "\nEspere 5 segundos!!" << endl;
+        this_thread::sleep_for(chrono::seconds(5)); // Esperar 5 segundos y se limpia la consola
+        system("clear");
     }
 
 
-
-    
     cout << "\nFin prueba 1 practica!!" << endl;
     return EXIT_SUCCESS;
 }
