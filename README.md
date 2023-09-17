@@ -1,9 +1,9 @@
 # Prueba_Practica_INFO198
 
 # Esto es para cargar la variable de entorno en problema01
-set -o allexport
-source config/.env
-export
+set -o allexport  
+source config/.env  
+export  
 
 # Ejecución
 make
