@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
-#include <mutex>
+#include <mutex> //biblioteca para utilizar objetos mutex, que se utilizan para sincronizar el acceso a datos compartidos entre hilos.
 #include "funciones/funciones.h"
 
 using namespace std;
@@ -16,6 +16,9 @@ int main(int argc, char* argv[]){
     string rutaOut = getenv("PATH_FILES_OUT");
     int nThreads = stoi(getenv("AMOUNT_THREADS"));
 
+    //Los mutex se utilizan para asegurarse de que solo un hilo pueda acceder 
+    //a ciertas secciones críticas del código a la vez. En este caso, se utilizará 
+    //para proteger la salida en la consola para evitar la mezcla de mensajes entre hilos concurrentes.
     mutex mtx;    
     
     vector<string> archivos;
