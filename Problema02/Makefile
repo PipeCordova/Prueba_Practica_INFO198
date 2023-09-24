@@ -1,7 +1,7 @@
 CC = g++
-CFLAGS = -std=c++17 -O3
+CFLAGS = -std=c++17 -O3 -pthread
 SOURCES = main02.cpp
-#FUNCTIONS = funciones/menu.cpp 
+FUNCTIONS = funciones/funciones.cpp 
 EXECUTABLE = app
 
 all: $(EXECUTABLE)
