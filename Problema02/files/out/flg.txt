@@ -1,0 +1,1 @@
+Texto para que no se buguee la carpeta out
