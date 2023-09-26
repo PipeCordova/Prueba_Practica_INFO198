@@ -1,20 +1,22 @@
 #include <iostream>
+#include <cstdlib>  // exit
 #include <vector>
 #include <thread>
-#include <mutex> //biblioteca para utilizar objetos mutex, que se utilizan para sincronizar el acceso a datos compartidos entre hilos.
+#include <mutex>    // biblioteca para utilizar objetos mutex, que se utilizan para sincronizar el acceso a datos compartidos entre hilos.
 #include "funciones/funciones.h"
 
 using namespace std;
-
-void miFuncion(int id) {
-    cout << "Hilo " << id << " ejecutando" << endl;
-}
 
 int main(int argc, char* argv[]){
     string ext = getenv("EXTENSION"); 
     string rutaIn = getenv("PATH_FILES_IN");
     string rutaOut = getenv("PATH_FILES_OUT");
     int nThreads = stoi(getenv("AMOUNT_THREADS"));
+
+    if(nThreads <= 0){
+        cerr << "Numero de threads invalido!\nnThreads debe ser mayor o igual a 1!\n";
+        exit(EXIT_FAILURE);
+    }
 
     //Los mutex se utilizan para asegurarse de que solo un hilo pueda acceder 
     //a ciertas secciones críticas del código a la vez. En este caso, se utilizará 
@@ -24,8 +26,18 @@ int main(int argc, char* argv[]){
     vector<string> archivos;
     listaArchivos(rutaIn, archivos);
 
-    int archivosPorThread = archivos.size() / nThreads;
+    int archivosPorThread = archivos.size() / nThreads; 
+
+    // Si se detectan mas threads que archivos, se ajusta para que cada thread ejecute un archivo, si no da error
+    if(nThreads > archivos.size()) {
+        archivosPorThread = 1;
+        nThreads = archivos.size();
+    }
+
+    int clearResult = system("clear");
+    cout << "Comenzando la creación de hilos...\n\n";
     vector<thread> hilos;
+
     for (int i = 0; i < nThreads; ++i) {
         // Define el rango de archivos para este hilo
         int inicio = i * archivosPorThread;
@@ -41,7 +53,7 @@ int main(int argc, char* argv[]){
             for (int j = inicio; j < fin; j++) {
                 cuentaPalabras(rutaIn + "/" + archivos[j], rutaOut + "/" + archivos[j]);
                 mtx.lock();
-                cout << "archivo " << rutaIn + "/" + archivos[j] << ", procesado por el thread " << i << endl;
+                cout << " -> archivo " << rutaIn + "/" + archivos[j] << ", procesado por el thread " << i << endl;
                 mtx.unlock();
             }
         });
@@ -54,7 +66,7 @@ int main(int argc, char* argv[]){
         hilo.join();
     }
 
-    cout << "Todos los hilos han terminado." << endl;
+    cout << "\nTodos los hilos han terminado.\n" << endl;
     
     
 }
