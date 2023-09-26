@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
 
         // Crea un hilo para procesar el grupo de archivos
         thread hilo([inicio, fin, i, rutaIn, rutaOut, archivos, &mtx]() {
-            for (int j = inicio; j < fin; ++j) {
+            for (int j = inicio; j < fin; j++) {
                 cuentaPalabras(rutaIn + "/" + archivos[j], rutaOut + "/" + archivos[j]);
                 mtx.lock();
                 cout << "archivo " << rutaIn + "/" + archivos[j] << ", procesado por el thread " << i << endl;
