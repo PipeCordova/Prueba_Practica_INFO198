@@ -17,6 +17,10 @@ int main(int argc, char* argv[]){
         cerr << "Numero de threads invalido!\nnThreads debe ser mayor o igual a 1!\n";
         exit(EXIT_FAILURE);
     }
+    if(rutaIn == rutaOut){
+        cerr << "PATH_FILES_IN y PATH_FILES_OUT no pueden ser iguales!!!\nDebe modificar variable de entorno\n";
+        exit(EXIT_FAILURE);
+    }
 
     //Los mutex se utilizan para asegurarse de que solo un hilo pueda acceder 
     //a ciertas secciones críticas del código a la vez. En este caso, se utilizará 
