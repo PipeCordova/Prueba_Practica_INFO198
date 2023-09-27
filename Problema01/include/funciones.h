@@ -20,7 +20,7 @@ using namespace std;
 
 bool algunParametroVacio(const string &param, const string &nombreParametro);
 vector<int> convertirlo(const string& v);
-bool usuarioExiste(const string& usuario, const string& contraseña, const string& nombreArchivo);
+bool usuarioExiste(const string& usuario, const string& contrasena, const string& nombreArchivo);
 
 void mostrarMenu(ifstream& archivoMenu);
 

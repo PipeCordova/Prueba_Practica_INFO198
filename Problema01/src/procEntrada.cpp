@@ -28,7 +28,7 @@ vector<int> convertirlo(const string& v) {
 }
 
 
-bool usuarioExiste(const string& usuario, const string& contraseña, const string& nombreArchivo) {
+bool usuarioExiste(const string& usuario, const string& contrasena, const string& nombreArchivo) {
     ifstream archivo(nombreArchivo);
     
     if (!archivo.is_open()) {
@@ -40,7 +40,7 @@ bool usuarioExiste(const string& usuario, const string& contraseña, const strin
     while (getline(archivo, linea)) {
         size_t igual = linea.find('=');
         if (igual != string::npos) {
-            if (linea.substr(0, igual) == usuario && linea.substr(igual + 1) == contraseña) {
+            if (linea.substr(0, igual) == usuario && linea.substr(igual + 1) == contrasena) {
                 archivo.close(); 
                 return true;
             }
