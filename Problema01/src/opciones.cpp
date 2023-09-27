@@ -8,7 +8,7 @@ void agregarElementosBD(const string &ruta) {
     }
     string nuevoElemento;
     cin.ignore(); // Limpiar el buffer antes de getline
-    cout << "Ingrese nuevo userName y pass: ";
+    cout << "Ingrese nuevo userName y pass (userName=Password): ";
     getline(cin, nuevoElemento);
     archivo << nuevoElemento << endl;
     cout << "Agregado!!\n" << endl;
