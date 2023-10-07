@@ -17,17 +17,22 @@ void mostrarMenu(ifstream& archivoMenu){
     }
 }
 
-void ejecutarOpcion(int eleccion, const vector<int>& vectorPermisos, const string& nombreArchivo, const string& usuario, vector<int>& vectorEntrada) {
+void ejecutarOpcion(int eleccion, const vector<int>& vectorPermisos, const string& nombreArchivo, const string& usuario, string& vectorEntrada) {
+    string comando;
     if (find(vectorPermisos.begin(), vectorPermisos.end(), eleccion) != vectorPermisos.end()) {
         switch (eleccion) {
             case 1:
                 agregarElementosBD(nombreArchivo);
                 break;
             case 2:
-                mostrarMensaje(usuario);
+                comando = "./progs_externos/executable/mensaje " + usuario;
+                // llamar a proceso externo
+                system(comando.c_str());
                 break;
             case 3:
-                ordenarVector(vectorEntrada);
+                comando = "./progs_externos/executable/ordena " + vectorEntrada; 
+                // llamar a proceso externo
+                system(comando.c_str());
                 break;
         }
     } else {

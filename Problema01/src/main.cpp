@@ -23,10 +23,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    vector<int> vectorEntrada = convertirlo(v); // Convertir a vector el "vector" v de la entrada.
-
     string pathUser = getenv("DB_USERS");
     string pathMenu = getenv("DB_MENU");
+
+    if (!usuarioExiste(u, p, pathUser)) { // si no es admin se verifica que exista en la BD
+        cout << "Usuario o contraseña ingresados no registrados en la BD!!" << endl;
+        exit(EXIT_FAILURE);
+    }
 
     vector <int> permisos;
     
@@ -45,13 +48,10 @@ int main(int argc, char *argv[]) {
 
         if (u == "admin" && p == "admin") { // modo admin
             permisos = {1,2,3};
-            ejecutarOpcion (eleccion, permisos, pathUser, u, vectorEntrada);
-        } else if (!usuarioExiste(u, p, pathUser)) { // si no es admin se verifica que exista en la BD
-            cout << "Usuario o contraseña ingresados no registrados en la BD!!" << endl;
-            exit(EXIT_FAILURE);
-        } else { // si existe en la BD, entonces esto
+            ejecutarOpcion (eleccion, permisos, pathUser, u, v);
+        } else { 
             permisos = {2,3};
-            ejecutarOpcion (eleccion, permisos, pathUser, u, vectorEntrada);
+            ejecutarOpcion (eleccion, permisos, pathUser, u, v);
         }
 
         cout << "\nEspere 5 segundos!!" << endl;

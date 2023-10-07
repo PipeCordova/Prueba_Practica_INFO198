@@ -10,24 +10,6 @@ bool algunParametroVacio(const string &param, const string &nombreParametro) {
 }
 
 
-vector<int> convertirlo(const string& v) {
-    vector<int> vec;
-    string token = "";
-    for (char ch : v) {
-        if (ch != ',') {
-            token += ch;
-        } else {
-            vec.push_back(stoi(token));
-            token = "";
-        }
-    }
-    if (!token.empty()) {
-        vec.push_back(stoi(token));
-    }
-    return vec;
-}
-
-
 bool usuarioExiste(const string& usuario, const string& contrasena, const string& nombreArchivo) {
     ifstream archivo(nombreArchivo);
     

@@ -1,3 +1,4 @@
+admin=admin
 cr7=goat
 messi=frionel
 mbappe=idolo
@@ -7,3 +8,5 @@ djokovic=badPlayer
 murray=goodPlayer
 garin=pechoFrio
 jarry=arrugon
+luis1=luis1
+pipe=pipe

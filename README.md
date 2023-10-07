@@ -7,7 +7,7 @@
 
 # Ejecución Problema 01
 - `make`
-- `./app -u "userName" -p "password" -v a,b,c...,z`
+- `./app -u "userName" -p "password" -v "a b c z"`
 
 # Variables de entorno Problema 02
 Para poder ejecutar el codigo es necesario exportar las variables de entorno que se mencionan a continuacion:
