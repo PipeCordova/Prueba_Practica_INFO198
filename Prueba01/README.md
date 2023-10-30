@@ -1,4 +1,4 @@
-# Prueba_Practica_INFO198
+# Prueba01_Practica_INFO198
 
 # Variables de entorno Problema 01
 - `set -o allexport`  
