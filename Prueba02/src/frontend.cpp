@@ -8,9 +8,9 @@ int main(int argc, char const *argv[]){
     int topk = 5;
     while (flg){
         int clearResult = system("clear");
-        cout << "### Buscador de indice invertido (pid = "<< getpid() << ") ###\n\n";
-        cout << "- Los topk documentos serán = " << topk << "\n";
-        cout << "- Escriba texto a buscar: ";
+        cout << "\tBUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
+        cout << "\tLos topk documentos serán = " << topk << "\n\n";
+        cout << "\tEscriba texto a buscar: " << "\n\n";
         string frase;
         getline(cin, frase);
     }

@@ -113,7 +113,7 @@ int main(int argc, char const *argv[]){
     // hay que hacer que se comunique con el cache.cpp
     // el cache debe traer un mensaje útil
     // AGREGAR VARIABLES DE ENTORNO AL FINAL
-    string idxFile = "./file.idx";
+    string idxFile = getenv("INDICE_INVERTIDO");
     unordered_map<string, vector<pair<string, int>>> indiceInvertido;
     crearHash(indiceInvertido, idxFile);
 
