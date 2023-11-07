@@ -2,6 +2,6 @@
 
 # Cargar variables de entorno
 
-set -o allexport
-source config/.env
-export
+set -o allexport  
+source config/.env  
+export  
