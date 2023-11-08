@@ -12,38 +12,6 @@
 
 using namespace std;
 
-int startServer(int& invIndexSocket, sockaddr_in& invIndexAddr, sockaddr_in& memcacheAddr) {
-    // Crear el socket del servidor
-    invIndexSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (invIndexSocket == -1) {
-        perror("Error al crear el socket del servidor");
-        exit(EXIT_FAILURE);
-    }
-
-    // Configurar la dirección del servidor
-    memset(&invIndexAddr, 0, sizeof(invIndexAddr));
-    invIndexAddr.sin_family = AF_INET;
-    invIndexAddr.sin_port = htons(12346);
-    invIndexAddr.sin_addr.s_addr = INADDR_ANY;
-
-    // Enlazar el socket a la dirección del servidor
-    if (bind(invIndexSocket, (struct sockaddr*)&invIndexAddr, sizeof(invIndexAddr)) == -1) {
-        perror("Error al enlazar el socket");
-        close(invIndexSocket);
-        exit(EXIT_FAILURE);
-    }
-
-    // Escuchar conexiones entrantes
-    if (listen(invIndexSocket, 5) == -1) {
-        perror("Error al escuchar");
-        close(invIndexSocket);
-        exit(EXIT_FAILURE);
-    }
-    cout << "Esperando conexiones entrantes..." << endl;
-    return 1;
-}
-
-
 // imprime el hash, solo para ver que se creó bien
 void imprimirHash(const unordered_map<string, vector<pair<string, int>>>& indiceInvertido){
     for (const auto& entrada : indiceInvertido) {
@@ -145,7 +113,7 @@ void obtenerPalabras(const string &frase, vector<string> &palabras) {
         palabras.push_back(palabra);
     }
 }
-
+/*
 int main(int argc, char const *argv[]){
     // hay que hacer que se comunique con el cache.cpp
     // el cache debe traer un mensaje útil
@@ -163,39 +131,73 @@ int main(int argc, char const *argv[]){
     buscarEnIdx(palabras,topk,indiceInvertido);
 
 }
+*/
 
-// int main() {
-//     int invIndexSocket, memcacheSocket;
-//     struct sockaddr_in invIndexAddr, memcacheAddr;
-//     socklen_t clientAddrLen = sizeof(memcacheAddr);
+// Función para conectar al servidor
+int connectToServer(const string& serverIP, int serverPort) {
+    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket == -1) {
+        perror("Error al crear el socket del cliente");
+        exit(EXIT_FAILURE);
+    }
 
-//     startServer(invIndexSocket, invIndexAddr, memcacheAddr);
+    struct sockaddr_in serverAddr;
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(serverPort);
+    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
 
-//     while (true) {
-//         // Aceptar la conexión entrante
-//         memcacheSocket = accept(invIndexSocket, (struct sockaddr*)&memcacheAddr, &clientAddrLen);
-//         if (memcacheSocket == -1) {
-//             perror("Error al aceptar la conexión");
-//             continue; // Continuar esperando conexiones
-//         }
+    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+        perror("Error al conectar al servidor");
+        close(clientSocket);
+        exit(EXIT_FAILURE);
+    }
 
-//         cout << "Cliente conectado" << endl;
-//         char msg[1024];
-//         bool success = true;
+    cout << "Conectado al servidor." << endl;
+    return clientSocket;
+}
 
-//         while (success) {
-//             ssize_t msgRead = recv(memcacheSocket, msg, sizeof(msg), 0);
-//             msg[msgRead] = '\0';
-//             cout << "Mensaje recibido: " << msg << endl;
-//             string responseMsg = "El mensaje recibido fue: " + string(msg);
-//             send(memcacheSocket, responseMsg.c_str(), responseMsg.length(), 0);
-//             close(memcacheSocket);
-//             cout << "Cliente desconectado" << endl;
-//             break; // Salir del bucle interior
-//         }
-//     }
+// Enviar msg al servidor (el msg pasa como string)
+void sendMessage(int clientSocket, const string& message) {
+    send(clientSocket, message.c_str(), message.length(), 0);
+}
 
-//     // El servidor seguirá esperando nuevas conexiones sin terminar
+// Recivir la respuesta del servidor
+void receiveAndDisplayMessage(int clientSocket) {
+    char buffer[1024];
+    ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+    if (bytesRead == -1) {
+        perror("Error al recibir datos del servidor");
+        close(clientSocket);
+        exit(EXIT_FAILURE);
+    }
+    else if (bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        cout << "Respuesta del servidor: " << buffer << endl;
+    }
+}
 
-//     return 0;
-// }
+int main() {
+    string serverIP = "127.0.0.1"; // Dirección IP del servidor
+    int serverPort = 12345;       // Puerto del servidor
+    int clientSocket = connectToServer(serverIP, serverPort); //Conectar al servidor, si no se pudo se termina la ejecucion
+    string msg;
+    int topk = 5;
+    bool again = true;
+    while (again) {
+        int clearResult = system("clear");
+        cout << "\tBUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
+        cout << "\tLos topk documentos serán = " << topk<< "\n\n";
+        cout << "\tEscriba texto a buscar: ";
+        getline(cin, msg);
+        sendMessage(clientSocket, msg);
+        receiveAndDisplayMessage(clientSocket);
+        if (msg == "S" || msg == "s") {
+            cout << "Se ha desconectado" << endl;
+            close(clientSocket);
+            exit(EXIT_FAILURE);
+        }
+    }
+    //close(clientSocket);
+    return 0;
+}

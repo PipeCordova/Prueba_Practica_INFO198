@@ -1,15 +1,7 @@
-TARGETS = searcher invertedindex memcache
-CXX = g++
-CXXFLAGS = -std=c++17 -O3
-
-frontend: frontend.cpp
-	$(CXX) $(CXXFLAGS) -o searcher frontend.cpp
-
-backend: backend.cpp
-	$(CXX) $(CXXFLAGS) -o invertedindex backend.cpp
-
-cache: cache.cpp
-	$(CXX) $(CXXFLAGS) -o memcache cache.cpp
-
+all:
+	make clean
+	g++ -std=c++17 -O3 -o searcher frontend.cpp
+	g++ -std=c++17 -O3 -o memcache cache.cpp
+	g++ -std=c++17 -O3 -o invertedIndex backend.cpp 
 clean:
-	$(RM) $(TARGETS)
+	rm -f searcher memcache invertedIndex
