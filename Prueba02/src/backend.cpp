@@ -186,17 +186,10 @@ int main() {
     bool again = true;
     while (again) {
         int clearResult = system("clear");
-        cout << "\tBUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
-        cout << "\tLos topk documentos serán = " << topk<< "\n\n";
-        cout << "\tEscriba texto a buscar: ";
+        cout << "\tEscriba mensaje: ";
         getline(cin, msg);
         sendMessage(clientSocket, msg);
         receiveAndDisplayMessage(clientSocket);
-        if (msg == "S" || msg == "s") {
-            cout << "Se ha desconectado" << endl;
-            close(clientSocket);
-            exit(EXIT_FAILURE);
-        }
     }
     //close(clientSocket);
     return 0;

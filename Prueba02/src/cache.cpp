@@ -4,8 +4,31 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <thread>
+#include <vector>
 
 using namespace std;
+
+vector<int> clientSockets;
+
+void handleClient(int clientSocket) {
+    char buffer[1024];
+    ssize_t bytesRead;
+
+    while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
+        buffer[bytesRead] = '\0';
+        cout << buffer << endl;
+
+        // Retransmitir el mensaje a todos los demás clientes
+        for (int otherSocket : clientSockets) {
+            if (otherSocket != clientSocket) {
+                send(otherSocket, buffer, bytesRead, 0);
+            }
+        }
+    }
+
+    close(clientSocket);
+}
 
 int startServer(int& serverSocket, sockaddr_in& serverAddr, sockaddr_in& clientAddr) {
     // Crear el socket del servidor
@@ -54,23 +77,32 @@ int main() {
         }
 
         cout << "Cliente conectado" << endl;
-        char msg[1024];
-        ssize_t bytesRead;
-        bool success = true;
 
-        while (success) {
-            ssize_t msgRead = recv(clientSocket, msg, sizeof(msg), 0);
-            msg[msgRead] = '\0';
-            cout << "Mensaje recibido: " << msg << endl;
-            string responseMsg = "El mensaje recibido fue: " + string(msg);
-            if (string(msg) == "Salir") {
-                send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
-                close(clientSocket);
-                cout << "Cliente desconectado" << endl;
-                break; // Salir del bucle interior
-            }
-            else {
-                send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
+        // Agregar el nuevo cliente a la lista de sockets de clientes
+        clientSockets.push_back(clientSocket);
+
+        // Crear un nuevo hilo para manejar la conexión del cliente
+        thread(handleClient, clientSocket).detach();
+
+        if(clientSockets.size() == 2){
+            char msg[1024];
+            ssize_t bytesRead;
+            bool success = true;
+
+            while (success) {
+                ssize_t msgRead = recv(clientSocket, msg, sizeof(msg), 0);
+                msg[msgRead] = '\0';
+                cout << "Mensaje recibido: " << msg << endl;
+                string responseMsg = "El mensaje recibido fue: " + string(msg);
+                if (string(msg) == "Salir") {
+                    send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
+                    close(clientSocket);
+                    cout << "Cliente desconectado" << endl;
+                    break; // Salir del bucle interior
+                }
+                else {
+                    send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
+                }
             }
         }
     }
