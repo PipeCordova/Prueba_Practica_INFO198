@@ -98,7 +98,7 @@ int main() {
                     send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
                     close(clientSocket);
                     cout << "Cliente desconectado" << endl;
-                    break; // Salir del bucle interior
+                    break;
                 }
                 else {
                     send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
@@ -109,5 +109,5 @@ int main() {
 
     // El servidor seguirá esperando nuevas conexiones sin terminar
 
-    return 0;
+    return EXIT_SUCCESS;
 }

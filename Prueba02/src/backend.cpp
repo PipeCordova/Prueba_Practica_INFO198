@@ -192,5 +192,5 @@ int main() {
         receiveAndDisplayMessage(clientSocket);
     }
     //close(clientSocket);
-    return 0;
+    return EXIT_SUCCESS;
 }

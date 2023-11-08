@@ -73,7 +73,7 @@ int main() {
         }
     }
     //close(clientSocket);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 // int main(int argc, char const *argv[]){
