@@ -17,7 +17,7 @@ void handleClient(int clientSocket) {
 
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
         buffer[bytesRead] = '\0';
-        cout << buffer << endl;
+        cout << "handleClient: " << buffer << endl;
 
         // Retransmitir el mensaje a todos los demás clientes
         for (int otherSocket : clientSockets) {
@@ -85,12 +85,26 @@ int main() {
         thread(handleClient, clientSocket).detach();
 
         if(clientSockets.size() == 2){
-            char msg[1024];
+            char msg0[1024];
+            char msg1[1024];
             ssize_t bytesRead;
             bool success = true;
 
             while (success) {
-                ssize_t msgRead = recv(clientSocket, msg, sizeof(msg), 0);
+                cout << "Entre aqui"<< endl;
+
+                ssize_t msgRead0 = recv(clientSockets[0], msg0, sizeof(msg0), 0);
+                msg0[msgRead0] = '\0';
+                ssize_t msgRead1 = recv(clientSockets[1], msg1, sizeof(msg1), 0);
+                msg1[msgRead1] = '\0';
+                //if(!string(msg0).empty())cout << "msg0 = " << string(msg0) << "\n\n";
+                //if(!string(msg1).empty())cout << "msg1 = " << string(msg1) << "\n\n";
+
+                success = false;
+
+
+                /*
+                ssize_t msgRead0 = recv(clientSockets[0], msg0, sizeof(msg0), 0);
                 msg[msgRead] = '\0';
                 cout << "Mensaje recibido: " << msg << endl;
                 string responseMsg = "El mensaje recibido fue: " + string(msg);
@@ -102,7 +116,7 @@ int main() {
                 }
                 else {
                     send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
-                }
+                }*/
             }
         }
     }
