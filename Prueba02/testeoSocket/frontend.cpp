@@ -1,17 +1,6 @@
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <thread>
-#include <vector>
-#include <fstream>
-#include <sstream>
+#include "../include/funcionesFrontend.h"
 
-using namespace std;
-
-struct Mensaje{
+struct Mensaje {
     string origen;
     string destino;
     string txtToSearch;
@@ -154,5 +143,5 @@ int main(int argc, char *argv[]) {
     // Cerrar el socket del cliente
     close(clientSocket);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
