@@ -86,13 +86,30 @@ void handleClient(int clientSocket) {
         }
 
         buffer[bytesRead] = '\0';
-        cout << buffer << endl;
+        cout << "BUF= "<<buffer << endl;
 
         Mensaje msg;
         unpackMessage(buffer, msg);
         //printMessage(msg);
 
         // Buscar si existe la clave msg.txtToSearch
+        if(msg.origen == "./searcher"){
+            if(cacheData.find(msg.txtToSearch) == cacheData.end()){
+                msg.origen = "./memcache";
+                msg.destino = "./invertedIndex";
+                sendMensaje(backSocket, msg);
+            } else{
+                msg.origen = "./memcache";
+                msg.destino = "./searcher";
+                msg.data = cacheData[msg.txtToSearch];
+                sendMensaje(clientSocket, msg);
+            }
+        }else if (msg.origen == "./invertedIndex"){
+            sendMensaje(backSocket, msg);
+        }
+
+        cacheData[msg.txtToSearch] = msg.data;
+        /*
         if (cacheData.find(msg.txtToSearch) != cacheData.end()) {
             // Si existe, enviar el valor como mensaje al frontend
             string responseMessage = "El valor de " + msg.txtToSearch + " es: ";
@@ -104,16 +121,17 @@ void handleClient(int clientSocket) {
             // Si no existe, enviar un mensaje al backend con la estructura msg
             // MENSAJE NO ENCONTRADO EN LA CACHE, BUSCAREMOS EN BACKEND
             if(msg.origen == "./invertedIndex") {
-                //cout << "ENTRE AQUI!!!" << endl;
                 sendMensaje(backSocket, msg);
             }
             else{
-                cout << "ENTRE AQUI!!!" << endl;
                 msg.origen = "./memcache";
                 msg.destino = "./invertedIndex";
                 sendMensaje(backSocket, msg);
             }
-        }
+        }*/
+
+        printMessage(msg);
+
     }
 
     close(clientSocket);
