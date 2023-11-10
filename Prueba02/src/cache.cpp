@@ -34,7 +34,7 @@ void imprimirCache(const unordered_map<string, vector<pair<string, int>>>& cache
 }
 
 void printMessage(const Mensaje &msg) {
-    cout << "Origen: " << msg.origen << endl;
+    cout << "\nOrigen: " << msg.origen << endl;
     cout << "Destino: " << msg.destino << endl;
     cout << "Texto a buscar: " << msg.txtToSearch << endl;
 
@@ -105,7 +105,7 @@ void handleClient(int clientSocket) {
 
         Mensaje msg;
         unpackMessage(buffer, msg);
-        //printMessage(msg);
+        printMessage(msg);
 
         // Buscar si existe la clave msg.txtToSearch
         if(msg.origen == front){
