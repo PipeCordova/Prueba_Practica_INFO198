@@ -103,17 +103,17 @@ void handleClient(int clientSocket) {
         } else {
             // Si no existe, enviar un mensaje al backend con la estructura msg
             // MENSAJE NO ENCONTRADO EN LA CACHE, BUSCAREMOS EN BACKEND
-            msg.origen = "./memcache";
-            msg.destino = "./invertedIndex";
-            sendMensaje(backSocket, msg);
+            if(msg.origen == "./invertedIndex") {
+                //cout << "ENTRE AQUI!!!" << endl;
+                sendMensaje(backSocket, msg);
+            }
+            else{
+                cout << "ENTRE AQUI!!!" << endl;
+                msg.origen = "./memcache";
+                msg.destino = "./invertedIndex";
+                sendMensaje(backSocket, msg);
+            }
         }
-
-        // Retransmitir el mensaje a todos los demás clientes
-        //for (int otherSocket : clientSockets) {
-            //if (otherSocket != clientSocket) {
-                //send(otherSocket, buffer, bytesRead, 0);
-            //}
-        //}
     }
 
     close(clientSocket);

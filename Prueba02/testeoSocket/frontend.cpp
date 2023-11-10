@@ -20,7 +20,7 @@ struct Mensaje{
 
 Mensaje msg;
 
-void printData(const Mensaje &msg) {
+void printData(Mensaje &msg) {
     int cont = 1;
     cout << "Origen: " << msg.origen << endl;
     cout << "Data: " << endl;
@@ -29,6 +29,7 @@ void printData(const Mensaje &msg) {
         cout << "  " << cont << ") " << dataPair.first << ": " << dataPair.second << endl;
         cont += 1;
     }
+    msg.data.clear();
 }
 
 void unpackMessage(const string &message, Mensaje &msg) {
@@ -137,6 +138,7 @@ int main(int argc, char *argv[]) {
         //msg.data = {{"example1", 1}, {"example2", 2}, {"example3", 3}};
         sendMensaje(clientSocket, msg);
 
+        // Para que se imprima bien
         this_thread::sleep_for(std::chrono::milliseconds(500));
 
         cout << "\n\n## Desea continuar (si/no)?\n";
