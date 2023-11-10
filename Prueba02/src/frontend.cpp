@@ -24,7 +24,7 @@ void printData(Mensaje &msg) {
     int cont = 1;
     cout << "Origen: " << msg.origen << endl;
     cout << "Data: " << endl;
-    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    if(msg.data.empty()) cout << "  0) Ninguna coincidencia encontrada!" << endl;
     else for (const auto &dataPair : msg.data) {
         cout << "  " << cont << ") " << dataPair.first << ": " << dataPair.second << endl;
         cont += 1;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
         auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start);
 
         // Para que se imprima bien
-        this_thread::sleep_for(std::chrono::milliseconds(500));
+        this_thread::sleep_for(std::chrono::milliseconds(150));
 
         cout << "\nTiempo transcurrido: " << duration.count() << " nanosegundos\n\n";
 

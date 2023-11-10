@@ -27,9 +27,9 @@ void imprimirCache(const unordered_map<string, vector<pair<string, int>>>& cache
     for (const auto& entry : cache) {
         cout << "Clave: " << entry.first << endl;
         
-        for (const auto& pair : entry.second) {
+        /*for (const auto& pair : entry.second) {
             cout << "  Subclave: " << pair.first << ", Valor: " << pair.second << endl;
-        }
+        }*/
     }
 }
 
@@ -122,12 +122,12 @@ void handleClient(int clientSocket) {
         }else if (msg.origen == back){
             sendMensaje(backSocket, msg);
         }
-        if(cacheData.size() < memSize) cacheData[msg.txtToSearch] = msg.data; // significa que aun entran datos en cache
+        if(cacheData.size() <= memSize) cacheData[msg.txtToSearch] = msg.data; // significa que aun entran datos en cache
         else{   
             cacheData[msg.txtToSearch] = msg.data;
-            cout << "CACHE LLENA!" << endl;
+            cout << "\n### CACHE LLENA! ###" << endl;
             imprimirCache(cacheData);
-            cout << "\nSe eliminará un elemento al azar..." << endl;
+            cout << "Se eliminará un elemento al azar..." << endl;
             random_device rd;
             mt19937 gen(rd());
             uniform_int_distribution<> dis(0, cacheData.size() - 1);
@@ -135,9 +135,9 @@ void handleClient(int clientSocket) {
             auto iter = cacheData.begin();
             advance(iter, randomIndex);
             cacheData.erase(iter);
-
+            imprimirCache(cacheData);
         }
-        printMessage(msg);
+        //printMessage(msg);
     }
 
     close(clientSocket);
