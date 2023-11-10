@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <random>
 
 using namespace std;
 
@@ -22,6 +23,16 @@ struct Mensaje{
     vector<pair<string, int>> data;
 };
 
+void imprimirCache(const unordered_map<string, vector<pair<string, int>>>& cache) {
+    for (const auto& entry : cache) {
+        cout << "Clave: " << entry.first << endl;
+        
+        for (const auto& pair : entry.second) {
+            cout << "  Subclave: " << pair.first << ", Valor: " << pair.second << endl;
+        }
+    }
+}
+
 void printMessage(const Mensaje &msg) {
     cout << "Origen: " << msg.origen << endl;
     cout << "Destino: " << msg.destino << endl;
@@ -30,7 +41,8 @@ void printMessage(const Mensaje &msg) {
     cout << "Data: " << endl;
     if(msg.data.empty()) cout << "  No hay nada" << endl;
     else for (const auto &dataPair : msg.data) cout << "  " << dataPair.first << ": " << dataPair.second << endl;
-}
+    cout << "\n\n";
+}   
 
 void sendMensaje(int backSocket, const Mensaje& msg) {
     string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
@@ -77,7 +89,8 @@ void handleClient(int clientSocket) {
     ssize_t bytesRead;
     int backSocket;
 
-    string host = getenv("HOST"), front = getenv("FRONT"), back = getenv("BACK"), memSize = getenv("MEMORY_SIZE");
+    string host = getenv("HOST"), front = getenv("FRONT"), back = getenv("BACK");
+    int memSize = stoi(getenv("MEMORY_SIZE"));
 
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
         // obtener el socket el backend
@@ -88,7 +101,7 @@ void handleClient(int clientSocket) {
         }
 
         buffer[bytesRead] = '\0';
-        cout << "BUF= "<<buffer << endl;
+        //cout << "BUF= "<<buffer << endl;
 
         Mensaje msg;
         unpackMessage(buffer, msg);
@@ -109,8 +122,21 @@ void handleClient(int clientSocket) {
         }else if (msg.origen == back){
             sendMensaje(backSocket, msg);
         }
+        if(cacheData.size() < memSize) cacheData[msg.txtToSearch] = msg.data; // significa que aun entran datos en cache
+        else{   
+            cacheData[msg.txtToSearch] = msg.data;
+            cout << "CACHE LLENA!" << endl;
+            imprimirCache(cacheData);
+            cout << "\nSe eliminará un elemento al azar..." << endl;
+            random_device rd;
+            mt19937 gen(rd());
+            uniform_int_distribution<> dis(0, cacheData.size() - 1);
+            int randomIndex = dis(gen);
+            auto iter = cacheData.begin();
+            advance(iter, randomIndex);
+            cacheData.erase(iter);
 
-        cacheData[msg.txtToSearch] = msg.data;
+        }
         printMessage(msg);
     }
 
