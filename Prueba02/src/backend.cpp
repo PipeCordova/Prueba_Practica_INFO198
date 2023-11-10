@@ -113,25 +113,6 @@ void obtenerPalabras(const string &frase, vector<string> &palabras) {
         palabras.push_back(palabra);
     }
 }
-/*
-int main(int argc, char const *argv[]){
-    // hay que hacer que se comunique con el cache.cpp
-    // el cache debe traer un mensaje útil
-    // AGREGAR VARIABLES DE ENTORNO AL FINAL
-    string idxFile = getenv("INDICE_INVERTIDO");
-    unordered_map<string, vector<pair<string, int>>> indiceInvertido;
-    crearHash(indiceInvertido, idxFile);
-
-    int topk = 5;
-    vector<string> palabras;
-    cout << "Ingrese una frase a buscar: ";
-    string frase;
-    getline(cin, frase);
-    obtenerPalabras(frase, palabras);
-    buscarEnIdx(palabras,topk,indiceInvertido);
-
-}
-*/
 
 // Función para conectar al servidor
 int connectToServer(const string& serverIP, int serverPort) {
