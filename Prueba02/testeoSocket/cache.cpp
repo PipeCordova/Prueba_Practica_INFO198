@@ -6,25 +6,114 @@
 #include <sys/socket.h>
 #include <vector>
 #include <thread>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
 
 using namespace std;
 
+unordered_map<string, vector<pair<string, int>>> cacheData;
 vector<int> clientSockets;
+
+struct Mensaje{
+    string origen;
+    string destino;
+    string txtToSearch;
+    vector<pair<string, int>> data;
+};
+
+void printMessage(const Mensaje &msg) {
+    cout << "Origen: " << msg.origen << endl;
+    cout << "Destino: " << msg.destino << endl;
+    cout << "Texto a buscar: " << msg.txtToSearch << endl;
+
+    cout << "Data: " << endl;
+    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    else for (const auto &dataPair : msg.data) cout << "  " << dataPair.first << ": " << dataPair.second << endl;
+}
+
+void sendMensaje(int backSocket, const Mensaje& msg) {
+    string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
+
+    for (const auto& p : msg.data) {
+        message += p.first + ":" + to_string(p.second) + ",";
+    }
+
+    send(backSocket, message.c_str(), message.length(), 0);
+}
+
+void unpackMessage(const string &message, Mensaje &msg) {
+    istringstream ss(message);
+    string token;
+    vector<string> parts;
+
+    while (getline(ss, token, '|')) parts.push_back(token);
+
+    if (parts.size() >= 3) {
+        msg.origen = parts[0];
+        msg.destino = parts[1];
+        msg.txtToSearch = parts[2];
+
+        if (parts.size() > 3) {
+            for (size_t i = 3; i < parts.size(); i++) {
+                istringstream ssPair(parts[i]);
+                string pairToken;
+                pair<string, int> dataPair;
+                while (getline(ssPair, pairToken, ':')) {
+                    string key = pairToken;
+                    if (getline(ssPair, pairToken, ',')) {
+                        int value = stoi(pairToken);
+                        dataPair = make_pair(key, value);
+                        msg.data.push_back(dataPair);
+                    }
+                }
+            }
+        }
+    }
+}
 
 void handleClient(int clientSocket) {
     char buffer[1024];
     ssize_t bytesRead;
+    int backSocket;
 
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
+        // obtener el socket el backend
+        for (int otherSocket : clientSockets) {
+            if (otherSocket != clientSocket) {
+                backSocket = otherSocket;
+            }
+        }
+
         buffer[bytesRead] = '\0';
         cout << buffer << endl;
 
-        // Retransmitir el mensaje a todos los demás clientes
-        for (int otherSocket : clientSockets) {
-            if (otherSocket != clientSocket) {
-                send(otherSocket, buffer, bytesRead, 0);
+        Mensaje msg;
+        unpackMessage(buffer, msg);
+        //printMessage(msg);
+
+        // Buscar si existe la clave msg.txtToSearch
+        if (cacheData.find(msg.txtToSearch) != cacheData.end()) {
+            // Si existe, enviar el valor como mensaje al frontend
+            string responseMessage = "El valor de " + msg.txtToSearch + " es: ";
+            for (auto &pair : cacheData[msg.txtToSearch]) {
+                responseMessage += "(" + pair.first + "," + to_string(pair.second) + ") ";
             }
+            send(backSocket, responseMessage.c_str(), responseMessage.length(), 0);
+        } else {
+            // Si no existe, enviar un mensaje al backend con la estructura msg
+            // MENSAJE NO ENCONTRADO EN LA CACHE, BUSCAREMOS EN BACKEND
+            msg.origen = "./memcache";
+            msg.destino = "./invertedIndex";
+            sendMensaje(backSocket, msg);
         }
+
+        // Retransmitir el mensaje a todos los demás clientes
+        //for (int otherSocket : clientSockets) {
+            //if (otherSocket != clientSocket) {
+                //send(otherSocket, buffer, bytesRead, 0);
+            //}
+        //}
     }
 
     close(clientSocket);

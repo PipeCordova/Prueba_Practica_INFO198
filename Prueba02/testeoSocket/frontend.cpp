@@ -5,8 +5,18 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <thread>
+#include <vector>
 
 using namespace std;
+
+struct Mensaje{
+    string origen;
+    string destino;
+    string txtToSearch;
+    vector<pair<string, int>> data;
+};
+
+//struct mensaje {}
 
 void receiveMessages(int clientSocket) {
     char buffer[1024];
@@ -16,6 +26,16 @@ void receiveMessages(int clientSocket) {
         buffer[bytesRead] = '\0';
         cout << "mensaje de vuelta: '" << buffer << "'\n";
     }
+}
+
+void sendMensaje(int clientSocket, const Mensaje& msg) {
+    string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
+
+    for (const auto& p : msg.data) {
+        message += p.first + ":" + to_string(p.second) + ",";
+    }
+
+    send(clientSocket, message.c_str(), message.length(), 0);
 }
 
 int main(int argc, char *argv[]) {
@@ -65,10 +85,14 @@ int main(int argc, char *argv[]) {
         cout << "Los topk documentos serán = " << topk<< "\n\n";
         cout << "Escriba texto a buscar: ";
         cin.getline(message, sizeof(message));
-        string fullMessage = username + " busca: " + message;
-        send(clientSocket, fullMessage.c_str(), fullMessage.length(), 0);
+        Mensaje msg;
+        msg.origen = "./searcher";
+        msg.destino = "./memcache";
+        msg.txtToSearch = message;
+        //msg.data = {{"example1", 1}, {"example2", 2}, {"example3", 3}};
+        sendMensaje(clientSocket, msg);
 
-        cout << "\n\n## Desea continuar (s/n)?\n";
+        cout << "\n\n## Desea continuar (si/no)?\n";
         getline(cin, seguir);
         if(seguir == "n" || seguir == "no") flg = false;
     }

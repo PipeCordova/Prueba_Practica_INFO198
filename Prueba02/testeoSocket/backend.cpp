@@ -13,12 +13,63 @@
 
 using namespace std;
 
+vector<string> palabras;
+unordered_map<string, vector<pair<string, int>>> indiceInvertido;
+int topk = 5;
+
+struct Mensaje{
+    string origen;
+    string destino;
+    string txtToSearch;
+    vector<pair<string, int>> data;
+};
+
 // Funciones para transformar el idx en un hash, y para buscar palabras (un vector de palabras) dentro del hash
 void obtenerPalabras(const string &frase, vector<string> &palabras);
-void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string, vector<pair<string, int>>>& indiceInvertido);
+void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string, vector<pair<string, int>>>& indiceInvertido, Mensaje &msg);
 void verificarCantidad (unordered_map<string, int>& interseccion, const int &cantPalabras, vector<string>& textosAceptados);
 void crearHash (unordered_map<string, vector<pair<string, int>>>& indiceInvertido, const string& idxFile);
 void imprimirHash(const unordered_map<string, vector<pair<string, int>>>& indiceInvertido);
+
+void printMessage(const Mensaje &msg) {
+    cout << "Origen: " << msg.origen << endl;
+    cout << "Destino: " << msg.destino << endl;
+    cout << "Texto a buscar: " << msg.txtToSearch << endl;
+
+    cout << "Data: " << endl;
+    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    else for (const auto &dataPair : msg.data) cout << "  " << dataPair.first << ": " << dataPair.second << endl;
+}
+
+void unpackMessage(const string &message, Mensaje &msg) {
+    istringstream ss(message);
+    string token;
+    vector<string> parts;
+
+    while (getline(ss, token, '|')) parts.push_back(token);
+
+    if (parts.size() >= 3) {
+        msg.origen = parts[0];
+        msg.destino = parts[1];
+        msg.txtToSearch = parts[2];
+
+        if (parts.size() > 3) {
+            for (size_t i = 3; i < parts.size(); i++) {
+                istringstream ssPair(parts[i]);
+                string pairToken;
+                pair<string, int> dataPair;
+                while (getline(ssPair, pairToken, ':')) {
+                    string key = pairToken;
+                    if (getline(ssPair, pairToken, ',')) {
+                        int value = stoi(pairToken);
+                        dataPair = make_pair(key, value);
+                        msg.data.push_back(dataPair);
+                    }
+                }
+            }
+        }
+    }
+}
 
 void receiveMessages(int clientSocket) {
     char buffer[1024];
@@ -27,30 +78,24 @@ void receiveMessages(int clientSocket) {
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
         buffer[bytesRead] = '\0';
         cout << "mensaje recibido: '" << buffer << "'\n";
+
+        Mensaje msg;
+        unpackMessage(buffer, msg);
+        // Aquí esta el msg con data vacío
+
+        obtenerPalabras(msg.txtToSearch, palabras);
+        buscarEnIdx(palabras,5,indiceInvertido,msg);
+        // Aquí ya se lleno data, ahora hay que devolver el mensaje
+
     }
 }
 
-/*string receiveMessages(int clientSocket) {
-    char buffer[1024];
-    ssize_t bytesRead;
-    stringstream ss;
-
-    while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
-        buffer[bytesRead] = '\0';
-        ss << "mensaje recibido: '" << buffer << "'\n";
-    }
-
-    return ss.str();
-}*/
-
+// ###################    MAIN      ##################
 int main(int argc, char *argv[]) {
     string username = "backend";
 
     string idxFile = "./file.idx";
-    unordered_map<string, vector<pair<string, int>>> indiceInvertido;
     crearHash(indiceInvertido, idxFile);
-    vector<string> palabras;
-    int topk = 5;
 
     int clientSocket;
     struct sockaddr_in serverAddr;
@@ -84,15 +129,14 @@ int main(int argc, char *argv[]) {
     // Enviar mensajes al servidor
     char message[1024];
     while (true) {
-        cout << "Ingrese una frase a buscar: ";
         string frase;
         getline(cin, frase);
-        obtenerPalabras(frase, palabras);
+        /*obtenerPalabras(frase, palabras);
         buscarEnIdx(palabras,topk,indiceInvertido);
         string fullMessage = username + " buscando la frase " + frase ;
         send(clientSocket, fullMessage.c_str(), fullMessage.length(), 0);
         frase.clear();
-        palabras.clear();
+        palabras.clear();*/
     }
 
     // Cerrar el socket del cliente
@@ -160,7 +204,7 @@ void verificarCantidad (unordered_map<string, int>& interseccion, const int &can
 
 // busca las palabras dentro del vector palabras en el hash del indice invertido
 // muestra solo <topk> textos
-void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string, vector<pair<string, int>>>& indiceInvertido){
+void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string, vector<pair<string, int>>>& indiceInvertido, Mensaje &msg){
     unordered_map<string, int> documentosContador; // texto01,sumRep
     unordered_map<string, int> interseccion;
     int cantPalabras = palabras.size();
@@ -190,7 +234,8 @@ void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string,
     int cont = 1;
     for (const auto &documento : documentosOrdenados){
         if(find(textosAceptados.begin(), textosAceptados.end(), documento.first) != textosAceptados.end()){
-            cout << cont << ") " << documento.first << ", " << documento.second << endl;
+            pair<string,int> xxx = make_pair(documento.first, documento.second);
+            msg.data.push_back(xxx);
             cont ++;
             if (cont > topk) break;
         }
@@ -199,6 +244,7 @@ void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string,
 
 // a partir de una frase, guarda cada palabra dentro del vector "palabras"
 void obtenerPalabras(const string &frase, vector<string> &palabras) {
+    palabras.clear();
     istringstream ss(frase);
     string palabra;
 
