@@ -136,10 +136,15 @@ int main(int argc, char *argv[]) {
         msg.destino = "./memcache";
         msg.txtToSearch = message;
         //msg.data = {{"example1", 1}, {"example2", 2}, {"example3", 3}};
+        auto start = chrono::high_resolution_clock::now();
         sendMensaje(clientSocket, msg);
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start);
 
         // Para que se imprima bien
         this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        cout << "\nTiempo transcurrido: " << duration.count() << " nanosegundos\n\n";
 
         cout << "\n\n## Desea continuar (si/no)?\n";
         getline(cin, seguir);
