@@ -4,33 +4,124 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <thread>
 #include <vector>
+#include <thread>
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
 
 using namespace std;
 
+unordered_map<string, vector<pair<string, int>>> cacheData;
 vector<int> clientSockets;
+
+struct Mensaje{
+    string origen;
+    string destino;
+    string txtToSearch;
+    vector<pair<string, int>> data;
+};
+
+void printMessage(const Mensaje &msg) {
+    cout << "Origen: " << msg.origen << endl;
+    cout << "Destino: " << msg.destino << endl;
+    cout << "Texto a buscar: " << msg.txtToSearch << endl;
+
+    cout << "Data: " << endl;
+    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    else for (const auto &dataPair : msg.data) cout << "  " << dataPair.first << ": " << dataPair.second << endl;
+}
+
+void sendMensaje(int backSocket, const Mensaje& msg) {
+    string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
+
+    for (const auto& p : msg.data) {
+        message += p.first + ":" + to_string(p.second) + ",";
+    }
+
+    send(backSocket, message.c_str(), message.length(), 0);
+}
+
+void unpackMessage(const string &message, Mensaje &msg) {
+    istringstream ss(message);
+    string token;
+    vector<string> parts;
+
+    while (getline(ss, token, '|')) parts.push_back(token);
+
+    if (parts.size() >= 3) {
+        msg.origen = parts[0];
+        msg.destino = parts[1];
+        msg.txtToSearch = parts[2];
+
+        if (parts.size() > 3) {
+            for (size_t i = 3; i < parts.size(); i++) {
+                istringstream ssPair(parts[i]);
+                string pairToken;
+                pair<string, int> dataPair;
+                while (getline(ssPair, pairToken, ':')) {
+                    string key = pairToken;
+                    if (getline(ssPair, pairToken, ',')) {
+                        int value = stoi(pairToken);
+                        dataPair = make_pair(key, value);
+                        msg.data.push_back(dataPair);
+                    }
+                }
+            }
+        }
+    }
+}
 
 void handleClient(int clientSocket) {
     char buffer[1024];
     ssize_t bytesRead;
+    int backSocket;
+
+    string host = getenv("HOST"), front = getenv("FRONT"), back = getenv("BACK"), memSize = getenv("MEMORY_SIZE");
 
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
-        buffer[bytesRead] = '\0';
-        cout << "handleClient: " << buffer << endl;
-
-        // Retransmitir el mensaje a todos los demás clientes
+        // obtener el socket el backend
         for (int otherSocket : clientSockets) {
             if (otherSocket != clientSocket) {
-                send(otherSocket, buffer, bytesRead, 0);
+                backSocket = otherSocket;
             }
         }
+
+        buffer[bytesRead] = '\0';
+        cout << "BUF= "<<buffer << endl;
+
+        Mensaje msg;
+        unpackMessage(buffer, msg);
+        //printMessage(msg);
+
+        // Buscar si existe la clave msg.txtToSearch
+        if(msg.origen == front){
+            if(cacheData.find(msg.txtToSearch) == cacheData.end()){
+                msg.origen = host;
+                msg.destino = back;
+                sendMensaje(backSocket, msg);
+            } else{
+                msg.origen = host;
+                msg.destino = front;
+                msg.data = cacheData[msg.txtToSearch];
+                sendMensaje(clientSocket, msg);
+            }
+        }else if (msg.origen == back){
+            sendMensaje(backSocket, msg);
+        }
+
+        cacheData[msg.txtToSearch] = msg.data;
+        printMessage(msg);
     }
 
     close(clientSocket);
 }
 
-int startServer(int& serverSocket, sockaddr_in& serverAddr, sockaddr_in& clientAddr) {
+int main() {
+    int serverSocket;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t clientAddrLen = sizeof(clientAddr);
+
     // Crear el socket del servidor
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
@@ -45,7 +136,7 @@ int startServer(int& serverSocket, sockaddr_in& serverAddr, sockaddr_in& clientA
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     // Enlazar el socket a la dirección del servidor
-    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("Error al enlazar el socket");
         close(serverSocket);
         exit(EXIT_FAILURE);
@@ -57,20 +148,12 @@ int startServer(int& serverSocket, sockaddr_in& serverAddr, sockaddr_in& clientA
         close(serverSocket);
         exit(EXIT_FAILURE);
     }
+
     cout << "Esperando conexiones entrantes..." << endl;
-    return 1;
-}
-
-int main() {
-    int serverSocket, clientSocket;
-    struct sockaddr_in serverAddr, clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
-
-    startServer(serverSocket, serverAddr, clientAddr);
 
     while (true) {
         // Aceptar la conexión entrante
-        clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+        int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &clientAddrLen);
         if (clientSocket == -1) {
             perror("Error al aceptar la conexión");
             continue; // Continuar esperando conexiones
@@ -83,45 +166,7 @@ int main() {
 
         // Crear un nuevo hilo para manejar la conexión del cliente
         thread(handleClient, clientSocket).detach();
-
-        if(clientSockets.size() == 2){
-            char msg0[1024];
-            char msg1[1024];
-            ssize_t bytesRead;
-            bool success = true;
-
-            while (success) {
-                cout << "Entre aqui"<< endl;
-
-                ssize_t msgRead0 = recv(clientSockets[0], msg0, sizeof(msg0), 0);
-                msg0[msgRead0] = '\0';
-                ssize_t msgRead1 = recv(clientSockets[1], msg1, sizeof(msg1), 0);
-                msg1[msgRead1] = '\0';
-                //if(!string(msg0).empty())cout << "msg0 = " << string(msg0) << "\n\n";
-                //if(!string(msg1).empty())cout << "msg1 = " << string(msg1) << "\n\n";
-
-                success = false;
-
-
-                /*
-                ssize_t msgRead0 = recv(clientSockets[0], msg0, sizeof(msg0), 0);
-                msg[msgRead] = '\0';
-                cout << "Mensaje recibido: " << msg << endl;
-                string responseMsg = "El mensaje recibido fue: " + string(msg);
-                if (string(msg) == "Salir") {
-                    send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
-                    close(clientSocket);
-                    cout << "Cliente desconectado" << endl;
-                    break;
-                }
-                else {
-                    send(clientSocket, responseMsg.c_str(), responseMsg.length(), 0);
-                }*/
-            }
-        }
     }
 
-    // El servidor seguirá esperando nuevas conexiones sin terminar
-
-    return EXIT_SUCCESS;
+    return 0;
 }

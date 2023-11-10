@@ -4,87 +4,153 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <thread>
+#include <vector>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
-// Función para conectar al servidor
-int connectToServer(const string& serverIP, int serverPort) {
-    int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+struct Mensaje{
+    string origen;
+    string destino;
+    string txtToSearch;
+    vector<pair<string, int>> data;
+};
+
+Mensaje msg;
+
+void printData(Mensaje &msg) {
+    int cont = 1;
+    cout << "Origen: " << msg.origen << endl;
+    cout << "Data: " << endl;
+    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    else for (const auto &dataPair : msg.data) {
+        cout << "  " << cont << ") " << dataPair.first << ": " << dataPair.second << endl;
+        cont += 1;
+    }
+    msg.data.clear();
+}
+
+void unpackMessage(const string &message, Mensaje &msg) {
+    istringstream ss(message);
+    string token;
+    vector<string> parts;
+
+    while (getline(ss, token, '|')) parts.push_back(token);
+
+    if (parts.size() >= 3) {
+        msg.origen = parts[0];
+        msg.destino = parts[1];
+        msg.txtToSearch = parts[2];
+
+        if (parts.size() > 3) {
+            for (size_t i = 3; i < parts.size(); i++) {
+                istringstream ssPair(parts[i]);
+                string pairToken;
+                pair<string, int> dataPair;
+                while (getline(ssPair, pairToken, ':')) {
+                    string key = pairToken;
+                    if (getline(ssPair, pairToken, ',')) {
+                        int value = stoi(pairToken);
+                        dataPair = make_pair(key, value);
+                        msg.data.push_back(dataPair);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void receiveMessages(int clientSocket) {
+    char buffer[1024];
+    ssize_t bytesRead;
+
+    while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
+        buffer[bytesRead] = '\0';
+        unpackMessage(buffer, msg);
+        printData(msg);
+    }
+
+    
+}
+
+void sendMensaje(int clientSocket, const Mensaje& msg) {
+    string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
+
+    for (const auto& p : msg.data) {
+        message += p.first + ":" + to_string(p.second) + ",";
+    }
+
+    send(clientSocket, message.c_str(), message.length(), 0);
+}
+
+int main(int argc, char *argv[]) {
+    string from = getenv("FROM");
+    string to = getenv("TO");
+
+    int clientSocket;
+    struct sockaddr_in serverAddr;
+
+    // Crear el socket del cliente
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket == -1) {
         perror("Error al crear el socket del cliente");
         exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_in serverAddr;
+    // Configurar la dirección del servidor
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(serverPort);
-    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str());
+    serverAddr.sin_port = htons(12345); // Puerto del servidor
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Dirección IP del servidor
 
-    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+    // Conectar al servidor
+    if (connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("Error al conectar al servidor");
         close(clientSocket);
         exit(EXIT_FAILURE);
     }
 
     cout << "Conectado al servidor." << endl;
-    return clientSocket;
-}
 
-// Enviar msg al servidor (el msg pasa como string)
-void sendMessage(int clientSocket, const string& message) {
-    send(clientSocket, message.c_str(), message.length(), 0);
-}
+    // Crear un nuevo hilo para recibir mensajes del servidor
+    thread(receiveMessages, clientSocket).detach();
 
-// Recivir la respuesta del servidor
-void receiveAndDisplayMessage(int clientSocket) {
-    char buffer[1024];
-    ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-    if (bytesRead == -1) {
-        perror("Error al recibir datos del servidor");
-        close(clientSocket);
-        exit(EXIT_FAILURE);
+
+    
+    // Enviar mensajes al servidor
+    bool flg = true;
+    string seguir;
+    int clearResult = system("clear");
+
+    char message[1024];
+    while (flg) {
+        clearResult = system("clear");
+        cout << "BUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
+        cout << "Escriba texto a buscar: ";
+        cin.getline(message, sizeof(message));
+        msg.origen = from;
+        msg.destino = to;
+        msg.txtToSearch = message;
+        //msg.data = {{"example1", 1}, {"example2", 2}, {"example3", 3}};
+        auto start = chrono::high_resolution_clock::now();
+        sendMensaje(clientSocket, msg);
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start);
+
+        // Para que se imprima bien
+        this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        cout << "\nTiempo transcurrido: " << duration.count() << " nanosegundos\n\n";
+
+        cout << "\n\n## Desea continuar (si/no)?\n";
+        getline(cin, seguir);
+        if(seguir == "n" || seguir == "no") flg = false;
     }
-    else if (bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-        cout << "Respuesta del servidor: " << buffer << endl;
-    }
-}
 
-int main() {
-    string serverIP = "127.0.0.1"; // Dirección IP del servidor
-    int serverPort = 12345;       // Puerto del servidor
-    int clientSocket = connectToServer(serverIP, serverPort); //Conectar al servidor, si no se pudo se termina la ejecucion
-    string msg;
-    int topk = 5;
-    bool again = true;
-    while (again) {
-        int clearResult = system("clear");
-        cout << "\tBUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
-        cout << "\tLos topk documentos serán = " << topk<< "\n\n";
-        cout << "\tEscriba texto a buscar: ";
-        getline(cin, msg);
-        sendMessage(clientSocket, msg);
-        receiveAndDisplayMessage(clientSocket);
-        if (msg == "S" || msg == "s") {
-            cout << "Se ha desconectado" << endl;
-            close(clientSocket);
-            exit(EXIT_FAILURE);
-        }
-    }
-    //close(clientSocket);
-    return EXIT_SUCCESS;
-}
+    // Cerrar el socket del cliente
+    close(clientSocket);
 
-// int main(int argc, char const *argv[]){
-//     bool flg = true;
-//     int topk = 5;
-//     while (flg){
-//         int clearResult = system("clear");
-//         cout << "\tBUSCADOR BASADO EN INDICE INVERTIDO (pid = " << getpid() << ")\n\n";
-//         cout << "\tLos topk documentos serán = " << topk << "\n\n";
-//         cout << "\tEscriba texto a buscar: ";
-//         string frase;
-//         getline(cin, frase);
-//     }
-// }
+    return 0;
+}
