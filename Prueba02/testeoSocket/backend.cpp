@@ -1,35 +1,8 @@
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <thread>
-#include <unordered_map>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
-#include <vector>
-
-using namespace std;
+#include "../include/funcionesBackend.h"
 
 vector<string> palabras;
 unordered_map<string, vector<pair<string, int>>> indiceInvertido;
 int topk = 5;
-
-struct Mensaje{
-    string origen;
-    string destino;
-    string txtToSearch;
-    vector<pair<string, int>> data;
-};
-
-// Funciones para transformar el idx en un hash, y para buscar palabras (un vector de palabras) dentro del hash
-void obtenerPalabras(const string &frase, vector<string> &palabras);
-void buscarEnIdx(const vector<string> &palabras, int topk, unordered_map<string, vector<pair<string, int>>>& indiceInvertido, Mensaje &msg);
-void verificarCantidad (unordered_map<string, int>& interseccion, const int &cantPalabras, vector<string>& textosAceptados);
-void crearHash (unordered_map<string, vector<pair<string, int>>>& indiceInvertido, const string& idxFile);
-void imprimirHash(const unordered_map<string, vector<pair<string, int>>>& indiceInvertido);
 
 void printMessage(const Mensaje &msg) {
     cout << "Origen: " << msg.origen << endl;
@@ -150,7 +123,7 @@ int main(int argc, char *argv[]) {
     // Cerrar el socket del cliente
     close(clientSocket);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 

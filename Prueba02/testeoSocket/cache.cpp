@@ -1,16 +1,4 @@
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <vector>
-#include <thread>
-#include <fstream>
-#include <sstream>
-#include <unordered_map>
-
-using namespace std;
+#include "../include/funcionesCache.h"
 
 unordered_map<string, vector<pair<string, int>>> cacheData;
 vector<int> clientSockets;
@@ -188,5 +176,5 @@ int main() {
         thread(handleClient, clientSocket).detach();
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
