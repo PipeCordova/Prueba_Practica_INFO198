@@ -86,11 +86,19 @@ void receiveMessages(int clientSocket) {
         obtenerPalabras(msg.txtToSearch, palabras);
         buscarEnIdx(palabras,5,indiceInvertido,msg);
         // Aquí ya se lleno data, ahora hay que devolver el mensaje
+        //send(clientSocket, fullMessage.c_str(), fullMessage.length(), 0);
+        msg.origen = "./invertedIndex";
+        msg.destino = "./searcher";
+        string message = msg.origen + "|" + msg.destino + "|" + msg.txtToSearch + "|";
+
+        for (const auto& p : msg.data) message += p.first + ":" + to_string(p.second) + ",";
+        
+        send(clientSocket, message.c_str(), message.length(), 0);
 
     }
 }
 
-// ###################    MAIN      ##################
+// ###################    MAIN      ###################
 int main(int argc, char *argv[]) {
     string username = "backend";
 

@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <thread>
 #include <vector>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -16,7 +18,48 @@ struct Mensaje{
     vector<pair<string, int>> data;
 };
 
-//struct mensaje {}
+Mensaje msg;
+
+void printData(const Mensaje &msg) {
+    int cont = 1;
+    cout << "Origen: " << msg.origen << endl;
+    cout << "Data: " << endl;
+    if(msg.data.empty()) cout << "  No hay nada" << endl;
+    else for (const auto &dataPair : msg.data) {
+        cout << "  " << cont << ") " << dataPair.first << ": " << dataPair.second << endl;
+        cont += 1;
+    }
+}
+
+void unpackMessage(const string &message, Mensaje &msg) {
+    istringstream ss(message);
+    string token;
+    vector<string> parts;
+
+    while (getline(ss, token, '|')) parts.push_back(token);
+
+    if (parts.size() >= 3) {
+        msg.origen = parts[0];
+        msg.destino = parts[1];
+        msg.txtToSearch = parts[2];
+
+        if (parts.size() > 3) {
+            for (size_t i = 3; i < parts.size(); i++) {
+                istringstream ssPair(parts[i]);
+                string pairToken;
+                pair<string, int> dataPair;
+                while (getline(ssPair, pairToken, ':')) {
+                    string key = pairToken;
+                    if (getline(ssPair, pairToken, ',')) {
+                        int value = stoi(pairToken);
+                        dataPair = make_pair(key, value);
+                        msg.data.push_back(dataPair);
+                    }
+                }
+            }
+        }
+    }
+}
 
 void receiveMessages(int clientSocket) {
     char buffer[1024];
@@ -24,8 +67,11 @@ void receiveMessages(int clientSocket) {
 
     while ((bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
         buffer[bytesRead] = '\0';
-        cout << "mensaje de vuelta: '" << buffer << "'\n";
+        unpackMessage(buffer, msg);
+        printData(msg);
     }
+
+    
 }
 
 void sendMensaje(int clientSocket, const Mensaje& msg) {
@@ -85,12 +131,13 @@ int main(int argc, char *argv[]) {
         cout << "Los topk documentos serán = " << topk<< "\n\n";
         cout << "Escriba texto a buscar: ";
         cin.getline(message, sizeof(message));
-        Mensaje msg;
         msg.origen = "./searcher";
         msg.destino = "./memcache";
         msg.txtToSearch = message;
         //msg.data = {{"example1", 1}, {"example2", 2}, {"example3", 3}};
         sendMensaje(clientSocket, msg);
+
+        this_thread::sleep_for(std::chrono::milliseconds(500));
 
         cout << "\n\n## Desea continuar (si/no)?\n";
         getline(cin, seguir);
