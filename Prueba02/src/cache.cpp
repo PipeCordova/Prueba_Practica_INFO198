@@ -54,6 +54,7 @@ void sendMensaje(int backSocket, const Mensaje& msg) {
     send(backSocket, message.c_str(), message.length(), 0);
 }
 
+// string -> <Origen> | <Destino> | <txtToSearch> | {texto01:200, texto02:500, .... }
 void unpackMessage(const string &message, Mensaje &msg) {
     istringstream ss(message);
     string token;
