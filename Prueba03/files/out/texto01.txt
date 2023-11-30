@@ -1,0 +1,9 @@
+seba; 3
+de; 2
+el; 1
+soy; 1
+chile; 1
+estas; 1
+valdivia; 1
+como; 1
+hola; 1

@@ -1,0 +1,5 @@
+dirBase=./dirBase
+dirs=dir1;dir2;dir3;dir4;dir5
+dir1=file1.txt;file2.txt
+dir2=file3.txt
+dir4=file5.txt;file6.txt;file7.txt;file8.txt

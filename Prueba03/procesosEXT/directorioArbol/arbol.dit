@@ -1,0 +1,27 @@
+{
+"dirBase": "./carpetaBase",
+"objetos":[
+    {
+    "tipo": "directorio",
+    "nombre": "dir1",
+    "objetos":[
+        {"tipo":"archivo", "nombre":"file1.txt", "contenido":"Este es el texto 1", "permisos":["escritura","lectura"]},
+        {"tipo":"archivo", "nombre":"file2.txt", "contenido":"Este es el texto 2", "permisos":["lectura"]},
+        {"tipo":"archivo", "nombre":"file3.txt", "contenido":"Este es el texto 3", "permisos":["escritura"]},
+        {
+        "tipo": "directorio",
+        "nombre": "dir1.1",
+        "objetos":[
+            {"tipo":"archivo", "nombre": "file1.txt", "contenido":"Este es el texto 1", "permisos":["escritura"]}
+        ]
+        }
+        
+    ]
+    },
+    {
+        "tipo": "directorio",
+        "nombre": "dir2",
+        "objetos": []
+    }
+]
+}
