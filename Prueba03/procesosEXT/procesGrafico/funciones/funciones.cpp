@@ -1,97 +1,96 @@
 #include "funciones.h"
 
+
 /*
-Creamos una expresion regular exactamente igual a como se ve en la primera linea del archivo "datos.gra".
-Seguido de los dos puntos : verificamos que sean cualquier cosa, osea, caracteres, numeros, etc. Lo que interesa
-validar es que la primera palabra sea "titulo:". y que a continuacion no sea un texto vacío. 
-Aprovechamos de crear una funcion pair para retornar el texto que es el nombre del titulo.
+En esta funcion validamos que la primera linea sea de la forma:
+    titulo:texto
 
-por ejemplo:
-    titulo:"" --> falso
-    tituloo:"Grafico de lineas" --> falso, ya que dice no dice "titulo"
+Entonces si o si debe decir 'titulo' antes de los dos puntos.
+Validamos que lo que viene acontinuacion de los dos puntos no sea vacio, ya que un titulo vacio no tiene
+sentido. Aprovechamos de retornar una funcion par para que devuelva el string titulo tambien.
+
+El titulo de datos.gra, dejalo sin comillas
 */
+pair<bool, string> validarPrimeraLinea(const string& archivo) {
+    ifstream file(archivo);
 
-pair<bool, string> validarTitulo(const string& linea) {
-    // Definir el patrón regex para el título
-    regex patron("titulo:\"([^\"]+)\"");
-
-    // Objeto para almacenar los resultados del match
-    smatch matches;
-
-    // Validar el título con el patrón regex
-    if (regex_match(linea, matches, patron)) {
-        // El título coincide con el patrón, devolver el título encontrado
-        return make_pair(true, matches[1]);
-    } else {
-        // El título no coincide con el patrón
-        return make_pair(false, "");
+    if (!file.is_open()) {
+        cerr << "Error al abrir el archivo." << endl;
+        return {false, ""};
     }
+
+    string primeraLinea;
+    getline(file, primeraLinea);
+
+    size_t pos = primeraLinea.find(':');
+    if (pos != string::npos) {
+        string antesDosPuntos = primeraLinea.substr(0, pos);
+        string titulo = primeraLinea.substr(pos + 1);
+        if (antesDosPuntos == "titulo" && !titulo.empty()) {
+            return {true, titulo};
+        }
+    }
+    file.close();
+    return {false, ""};
 }
 
 
+
+
 /*
-Creamos la expresion regular. Notemos que la forma es exacta al formato de "datos.gra", solo que los \\d+
-significa que seguido de los dos puntos : despues de la x o y, debe ir un digito o mas entre 0 y 9. Por ejemplo si 
-se llegara a poner una letra en vez de un numero devuelve falso. Tambien devuelve falso si se
-llegará a colocar una coordenada z:10
+funcion creada manualmente para ver si cada linea desde la 2, cumple con el formato: x:int,y:int
 */
 bool validarFormato(const string& linea) {
-    // Definir el patrón regex para la línea esperada
-    regex patron("x:\\d+,y:\\d+");
+    size_t posX = linea.find("x:");
+    size_t posY = linea.find("y:");
 
-    // Validar la línea con el patrón regex
-    return regex_match(linea, patron);
-}
+    if (posX != string::npos && posY != string::npos && posX < posY) {
+        size_t posXDigit = posX + 2;
+        size_t posYDigit = posY + 2;
 
-
-
-/* Quizas se pudo haber hecho de otra manera, ya que estoy repitiendo el patron con la expresion regular de la
-funcion validarFormato... Pero esta funcion lo que hace es retornar 2 vectores con cada valor de x y
-correspondiente... es necesario repetir el patron para leer el valor. Pensé en hacerlo en la funcion validarFormato,
-pero ya hubiera sido muy complicado retornar los 2 vectores y el booleano, ademas hubiera tenido que modificar
-el main que ya esta funcionando bien...
-*/
-pair<vector<int>, vector<int>> extraerValoresDesdeArchivo(const string& nombreArchivo) {
-    vector<int> valoresX, valoresY;
-
-    // Definir el patrón regex para las líneas esperadas
-    regex patron("x:(\\d+),y:(\\d+)");
-
-    // Abrir el archivo
-    ifstream archivo(nombreArchivo);
-
-    if (archivo.is_open()) {
-        // Ignorar la primera línea (presumiblemente el título)
-        string titulo;
-        getline(archivo, titulo);
-
-        // Leer las líneas restantes y extraer los valores de 'x' e 'y'
-        string linea;
-        while (getline(archivo, linea)) {
-            // Obtener los resultados del regex
-            smatch resultados;
-
-            // Validar la línea con el patrón regex
-            if (regex_match(linea, resultados, patron)) {
-                // Obtener los números encontrados en 'x' e 'y'
-                int numeroX = stoi(resultados[1].str());
-                int numeroY = stoi(resultados[2].str());
-
-                // Agregar los números a los vectores correspondientes
-                valoresX.push_back(numeroX);
-                valoresY.push_back(numeroY);
-            }
+        while (posXDigit < linea.length() && isdigit(linea[posXDigit])) {
+            ++posXDigit;
         }
 
-        // Cerrar el archivo
-        archivo.close();
-    } else {
-        cerr << "No se pudo abrir el archivo: " << nombreArchivo << endl;
+        while (posYDigit < linea.length() && (isdigit(linea[posYDigit]) || isspace(linea[posYDigit]) || linea[posYDigit] == ',')) {
+            ++posYDigit;
+        }
+
+        // Verificar si llegamos al final de la línea después de 'y:'
+        return posXDigit > posX + 2 && posYDigit > posY + 2 && (posYDigit == linea.length() || isspace(linea[posYDigit]));
     }
 
-    // Devolver los vectores con los valores de 'x' e 'y'
-    return {valoresX, valoresY};
+    return false;
 }
 
+bool validarArchivo(const string& nombreArchivo) {
+    ifstream archivo(nombreArchivo);
 
+    if (!archivo.is_open()) {
+        cerr << "Error al abrir el archivo." << endl;
+        return false;
+    }
+
+    string linea;
+    bool formatoValido = true;
+    int numeroLinea = 1;
+
+    while (getline(archivo, linea)) {
+        if (numeroLinea >= 2 && !validarFormato(linea)) {
+            formatoValido = false;
+            //cout << "Formato no válido en la línea " << numeroLinea << ": " << linea << endl;
+        }
+        ++numeroLinea;
+    }
+
+    archivo.close();
+
+    // if (formatoValido) {
+    //     cout << "El formato es válido en todas las líneas." << endl;
+    // } else {
+    //     cout << "El formato no es válido en al menos una línea." << endl;
+    // }
+
+    return formatoValido;
+}
 

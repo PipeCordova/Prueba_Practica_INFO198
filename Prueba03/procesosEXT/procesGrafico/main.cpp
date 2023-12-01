@@ -1,6 +1,77 @@
 #include "funciones/funciones.h"
 #include "funciones/funciones.cpp"
 
+struct Point {
+    float x, y;
+};
+
+string title;
+vector<Point> points;
+
+void loadData(const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error al abrir el archivo" << endl;
+        exit(EXIT_FAILURE);
+    }
+    string line;
+    while (getline(file, line)) {
+        /*if (line.find("titulo:") != string::npos) {
+            title = line.substr(line.find(":") + 1);
+        }*/
+        if (line.find("x:") != string::npos && line.find("y:") != string::npos) {
+            Point p;
+            sscanf(line.c_str(), "x:%f,y:%f", &p.x, &p.y);
+            points.push_back(p);
+        }
+    }
+    file.close();
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 1.0, 1.0);
+
+    glBegin(GL_LINES);
+    glVertex2f(-100.0, 0.0);
+    glVertex2f(100.0, 0.0);
+    glVertex2f(0.0, -100.0);
+    glVertex2f(0.0, 100.0);
+    glEnd();
+
+
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINE_STRIP);
+    for (const auto& point : points) {
+        glVertex2f(point.x, point.y);
+    }
+    glEnd();
+
+    glColor3f(1.0, 1.0, 1.0);
+    glRasterPos2f(90.0, -2.0);
+    for (char c : "X") {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
+    }
+
+    glRasterPos2f(-5.0, 90.0);
+    for (char c : "Y") {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
+    }
+
+    glRasterPos2f(-40.0, 90.0);
+    for (char c : title) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
+    }
+
+    glFlush();
+}
+
+void init() {
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(-100.0, 100.0, -100.0, 100.0); // Establece el rango de -100 a 100 en ambos ejes
+}
 
 int main(int argc, char* argv[]){
     if(argc != 2){
@@ -8,6 +79,7 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
     
+
     cout << endl;
     string path = argv[1];
 
@@ -21,68 +93,39 @@ int main(int argc, char* argv[]){
 
     // Parte Pipe, Iniciando validacion formato 
 
-
-    ifstream archivo(path); // abrimos el archivo datos.gra
-
-    // Verificar si el archivo se abrió correctamente
-    if (!archivo.is_open()) {
-        cerr << "Error al abrir el archivo." << endl;
-        return 1;
-    }
-    string linea;
-
-    // Variable para indicar si el formato es válido o no
-    bool formatoValido = true;
-
-    string titulo;
-    // Validar la primera línea como título
-    if (getline(archivo, linea)) {
-        auto resultadoTitulo = validarTitulo(linea);
-
-        if (!resultadoTitulo.first) {
-            formatoValido = false;
-        } else {
-            titulo = resultadoTitulo.second;
-        }
-    } else {
-        formatoValido = false; // El archivo está vacío
-    }
-
-    // cout << titulo << endl;;
-
-
-    // Validar el formato de las líneas restantes
-    while (getline(archivo, linea)) {
-        // Validar el formato de la línea actual
-        if (!validarFormato(linea)) {
-            formatoValido = false;
-            break; // Salir del bucle si se encuentra una línea con formato incorrecto
-        }
-    }
-
-
-    // Imprimir el resultado final
-    if (!formatoValido) {
-        cout << "El formato del archivo NO es válido!." << endl;
+    auto resultado = validarPrimeraLinea(path); 
+    if (!resultado.first) {
+        cout << "Formato del archivo no valido!" << endl;
         exit(EXIT_FAILURE);
     }
 
+    //cout << resultado.second << endl;
+    string titulo = resultado.second; // titulo del grafico
 
 
-
-    vector<int> valoresX, valoresY;
-    auto valores = extraerValoresDesdeArchivo(path);
-
-    valoresX = valores.first;
-    valoresY = valores.second;
-
-    // for (size_t i = 0; i < numerosX.size(); i++){
-    //     cout << "x:" << posX[i] << " y:" << posY[i] << endl;
-    // }
-
-    // cout << endl;
-
+    // Validando desde segunda linea con el formato x:int,y:int
+    bool flag = validarArchivo(path);
+    if (!flag) {
+        cout << "Formato del archivo no valido!" << endl;
+        exit(EXIT_FAILURE);
+    }
     
+
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(500, 500);
+    glutInitWindowPosition(100, 100);
+    const char* titulo_cstr = titulo.c_str(); // convirtiendo el string titulo a char
+    glutCreateWindow(titulo_cstr);
+
+    init();
+    loadData(path);
+
+    cout << "Para continuar cerrar la grafica" << endl;
+    glutDisplayFunc(display);
+    glutMainLoop();
+
 
     return EXIT_SUCCESS;
 }
