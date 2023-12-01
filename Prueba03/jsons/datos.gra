@@ -1,6 +1,12 @@
-titulo:"Este es el titulo"
-x:1,y:5
-x:3,y:6
-x:4,y:8
-x:10,y:9
-x:32,y:15
+titulo:Grafico de Pipe
+x:-30,y:30
+x:-30,y:-30
+x:30,y:-30
+x:30,y:30
+x:-30,y:30
+x:0,y:80
+x:100,y:100
+x:40,y:0
+x:40,y:0
+x:30,y:30
+x:0,y:0

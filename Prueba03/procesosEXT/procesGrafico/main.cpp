@@ -49,11 +49,11 @@ void display() {
     glEnd();
 
     glColor3f(1.0, 1.0, 1.0);
-    glRasterPos2f(90.0, -5.0);
+    glRasterPos2f(95.0, 1.0);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'X'); // Poner la X del eje
 
 
-    glRasterPos2f(-5.0, 90.0);
+    glRasterPos2f(1.0, 95.0);
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Y'); // poner la Y del eje
 
     glFlush();
@@ -63,7 +63,9 @@ void init() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-100.0, 100.0, -100.0, 100.0); // Establece el rango de -100 a 100 en ambos ejes
+   // gluOrtho2D(-100.0, 100.0, -100.0, 100.0); // Establece el rango de -100 a 100 en ambos ejes
+    gluOrtho2D(-3.0, 100.0, -3.0, 100.0); // Establece el rango de -100 a 100 en ambos ejes
+
 }
 
 int main(int argc, char* argv[]){

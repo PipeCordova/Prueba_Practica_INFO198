@@ -72,7 +72,7 @@ int main(int argc, char* argv[]){
 
     // Crear comandos para ejecutar procesos externos
     string ext = getenv("EXTENSION"), pathIn = getenv("PATH_FILES_IN"), pathOut = getenv("PATH_FILES_OUT"), nThreads = getenv("AMOUNT_THREADS"), invIdxFile = getenv("INVERTED_INDEX_FILE");
-    string preCom8 = getenv("PRECOM8"), preCom9 = getenv("PRECOM9"), preCom10 = getenv("PRECOM10");
+    string preCom8 = getenv("PRECOM8"), preCom9 = getenv("PRECOM9"), preCom10 = getenv("PRECOM10"), preCom11 = getenv("PRECOM11"), preCom12 = getenv("PRECOM12"), preCom13 = getenv("PRECOM13");
     string comandoOP8 = preCom8 + " " + ext + " " + pathIn + " " + pathOut + " " + nThreads;
     string comandoOP9 = preCom9 + " " + invIdxFile + " " + pathOut;
 
@@ -145,19 +145,19 @@ int main(int argc, char* argv[]){
                 string path11;
                 cout << "Ingrese archivo a procesar: "; // jsons/arbol.dit
                 cin >> path11;
-                string comandoOP11 = "./procesosEXT/directorioArbol/app " + path11;
+                string comandoOP11 = preCom11 + " " + path11;
                 basura = system(comandoOP11.c_str());
             } else if(opcion == 12){
                 string path12;
                 cout << "Ingrese archivo a procesar: "; // jsons/datos.dre
                 cin >> path12;
-                string comandoOP12 = "./procesosEXT/directorioCircular/app " + path12;
+                string comandoOP12 =  preCom12 + " " + path12;
                 basura = system(comandoOP12.c_str());
             } else if(opcion == 13){
                 string path13;
                 cout << "Ingrese archivo a procesar: "; // jsons/datos.gra
                 cin >> path13;
-                string comandoOP13 = "./procesosEXT/procesGrafico/app " + path13;
+                string comandoOP13 = preCom13 + " " + path13;
                 basura = system(comandoOP13.c_str());
             }
         } else {
