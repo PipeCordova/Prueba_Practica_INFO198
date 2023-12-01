@@ -1,6 +1,7 @@
 #include "funciones/funciones.h"
 #include "funciones/funciones.cpp"
 
+
 struct Point {
     float x, y;
 };
@@ -48,20 +49,12 @@ void display() {
     glEnd();
 
     glColor3f(1.0, 1.0, 1.0);
-    glRasterPos2f(90.0, -2.0);
-    for (char c : "X") {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
-    }
+    glRasterPos2f(90.0, -5.0);
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'X'); // Poner la X del eje
+
 
     glRasterPos2f(-5.0, 90.0);
-    for (char c : "Y") {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
-    }
-
-    glRasterPos2f(-40.0, 90.0);
-    for (char c : title) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, c);
-    }
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, 'Y'); // poner la Y del eje
 
     glFlush();
 }
@@ -88,14 +81,9 @@ int main(int argc, char* argv[]){
     string ext = path.substr(path.length() - 4);
     if (ext != ".gra"){ cerr << "Error!!! Debe ingresar un archivo '.gra'\n\n"; exit(EXIT_FAILURE); }
 
-    //cout << "Path del archivo: " << path << endl;
-
-
-    // Parte Pipe, Iniciando validacion formato 
-
     auto resultado = validarPrimeraLinea(path); 
     if (!resultado.first) {
-        cout << "Formato del archivo no valido!" << endl;
+        cout << "Formato del archivo no valido! (titulo)" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -106,7 +94,7 @@ int main(int argc, char* argv[]){
     // Validando desde segunda linea con el formato x:int,y:int
     bool flag = validarArchivo(path);
     if (!flag) {
-        cout << "Formato del archivo no valido!" << endl;
+        cout << "Formato del archivo no valido (lineas)!" << endl;
         exit(EXIT_FAILURE);
     }
     

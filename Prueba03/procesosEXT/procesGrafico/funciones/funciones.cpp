@@ -48,8 +48,18 @@ bool validarFormato(const string& linea) {
         size_t posXDigit = posX + 2;
         size_t posYDigit = posY + 2;
 
+        if (linea[posXDigit] == '-') {
+            // Si hay un signo menos en la coordenada x, avanzar al siguiente carácter
+            ++posXDigit;
+        }
+
         while (posXDigit < linea.length() && isdigit(linea[posXDigit])) {
             ++posXDigit;
+        }
+
+        if (linea[posYDigit] == '-') {
+            // Si hay un signo menos en la coordenada y, avanzar al siguiente carácter
+            ++posYDigit;
         }
 
         while (posYDigit < linea.length() && (isdigit(linea[posYDigit]) || isspace(linea[posYDigit]) || linea[posYDigit] == ',')) {

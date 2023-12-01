@@ -1,13 +1,2 @@
-CC = g++
-CFLAGS = -std=c++17 -O3
-SOURCES = main.cpp
-# FUNCTIONS = funciones/funciones.cpp 
-EXECUTABLE = app
-
-all: $(EXECUTABLE)
-
-$(EXECUTABLE): $(SOURCES) # $(FUNCTIONS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-clean:
-	rm -f $(EXECUTABLE)
+all:
+	g++ -std=c++17 main.cpp -o grafico -lGL -lGLU -lglut
